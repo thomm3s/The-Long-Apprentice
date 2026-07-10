@@ -2,7 +2,28 @@ extends CharacterBody3D
 
 const SPEED = 5.0
 const JUMP_VELOCITY = 4.5
+const INTERACT_RANGE = 3.0
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
+
+# Placeholder wood counter (numbers-only inventory autoload comes later in
+# the queue). Prints on change so this is visible without UI yet.
+var wood_count := 0
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("interact"):
+		_try_interact()
+
+func _try_interact() -> void:
+	var camera: Camera3D = $Camera3D
+	var space_state: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state
+	var from: Vector3 = camera.global_position
+	var to: Vector3 = from + (-camera.global_transform.basis.z) * INTERACT_RANGE
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, to)
+	var result: Dictionary = space_state.intersect_ray(query)
+	if result and result.collider.is_in_group("choppable") and result.collider.has_method("chop"):
+		result.collider.chop()
+		wood_count += 1
+		print("Wood: ", wood_count)
 
 func _physics_process(delta):
 	if not is_on_floor():

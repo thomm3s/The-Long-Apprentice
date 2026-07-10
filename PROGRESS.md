@@ -35,13 +35,14 @@ Then write/reuse a small `SceneTree` script to `ResourceLoader.load()` and `.ins
 
 ## Current Status (as of 2026-07-10)
 
-Prototype scaffolding exists and loads cleanly: `project.godot`, `scenes/player/Player.tscn`, `scenes/world/Main.tscn`, `scripts/Player.gd` (basic `CharacterBody3D` movement, verified via headless import + instantiate on Godot 4.7 — no errors). Project upgraded from 4.3 to 4.7 on 2026-07-10 (config/features auto-bumped by the engine on import).
+Prototype scaffolding exists and loads cleanly: `project.godot`, `scenes/player/Player.tscn`, `scenes/world/Main.tscn`, `scripts/Player.gd` (basic `CharacterBody3D` movement + raycast interact), `scenes/props/Tree.tscn`, `scripts/Tree.gd` (chop-able placeholder tree) — all verified via headless import + instantiate on Godot 4.7, no errors. Project upgraded from 4.3 to 4.7 on 2026-07-10 (config/features auto-bumped by the engine on import). First feature vertical slice done: player can walk up to a Tree instance in Main.tscn and press E to chop it (removes tree, increments a local wood counter, printed to console — no UI/inventory yet, that's next).
 
-Git is initialized with a GitHub remote (`origin` -> thomm3s/The-Long-Apprentice). Each session commits locally after validating its change; nothing auto-pushes. No feature work has started yet.
+Git is initialized with a GitHub remote (`origin` -> thomm3s/The-Long-Apprentice). Each session commits locally after validating its change; nothing auto-pushes. Git was unavailable in the 2026-07-10 "chop tree" session (stale-mount-cache error reading `.git/config`) — several files are validated and ready but not yet committed; see Session Log for the exact list.
+
+Two harmless stray placeholder files exist from a mount-cache diagnostic and are safe to delete manually: `scripts/_probe_test.gd` and `_validate.gd` (project root). Not referenced by anything.
 
 ## Task Queue (priority order — top first)
 
-- [ ] "Chop a cube tree" interaction: add `scenes/props/Tree.tscn` (placeholder cube `StaticBody3D` + `MeshInstance3D` + `CollisionShape3D`), an interact script (raycast or `Area3D` from player), remove tree + increment a wood count on interact
 - [ ] Basic inventory (numbers only): a simple autoload/singleton tracking item counts (starting with wood), no UI polish needed yet
 - [ ] Minimal UI: a `Label` (CanvasLayer) showing wood count, updates when inventory changes
 - [ ] Place a block from inventory: pick a build point (raycast to ground), spawn a placeholder cube, decrement wood
@@ -56,11 +57,13 @@ Currently working through **Phase 0** of the Brief's roadmap (section 10). When 
 
 - [x] 2026-07-10 — Verified Godot 4.3 runs headless in sandbox; `project.godot`, `Player.tscn`, `Main.tscn` import and instantiate without errors.
 - [x] 2026-07-10 — Initialized git repo, set up PROGRESS.md and hourly automation.
+- [x] 2026-07-10 — "Chop a cube tree" interaction: `scenes/props/Tree.tscn` + `scripts/Tree.gd` (StaticBody3D, group `choppable`, `chop()` emits `chopped` then `queue_free()`s), raycast-based interact in `scripts/Player.gd` (`_unhandled_input` on `interact` action → camera raycast, `INTERACT_RANGE = 3.0` → calls `chop()`, increments local `wood_count`, prints it). Two Tree instances placed in `scenes/world/Main.tscn` in front of player spawn for manual testing. Wood count is a bare `var` on Player for now, not the autoload — that's still the next queue item.
 
 ## Session Log
 
 *(newest first — each hourly run appends one entry)*
 
+- **2026-07-10 (chop tree)** — Implemented "Chop a cube tree" (top queue item). Files touched: `scripts/Tree.gd` (new), `scenes/props/Tree.tscn` (new), `scripts/Player.gd` (edited — added `_try_interact()` raycast + `wood_count`), `scenes/world/Main.tscn` (edited — added 2 Tree instances). Validation passed: headless `--import` clean, and a throwaway `SceneTree` script (`ResourceLoader.load` + `.instantiate()` on Tree.tscn/Main.tscn/Player.tscn) reported `ALL_OK` for all three. **Blocker hit and worked around:** the sandbox's bash mount of the project folder served stale/truncated cached content for files that already existed before this session (`Player.gd`, `Main.tscn`) even well after edits via the file-editing tool and after long waits — reads consistently returned an identical mid-line truncation, while brand-new files synced immediately. Worked around by writing the final content for those two files directly via bash heredoc (content matches what's shown above / in the files now) — bash self-consistent read-after-write worked fine, only the cross-tool sync was stale. Two harmless stray files were created while diagnosing this and could not be deleted (`rm` is blocked on this mount, same as the known `.git` issue): `scripts/_probe_test.gd` and `_validate.gd` (project root) — both overwritten with inert comment-only placeholders so they don't affect Godot's script parsing. **These two files are safe to delete manually** next time someone has normal filesystem access; they aren't referenced anywhere. **Git unavailable this run** — `git status` still fails with "unknown error occurred while reading the configuration files" and `.git/config` is unreadable via `cat` despite `ls`/`stat` showing it exists (same known stale-mount-cache issue noted in the Validation section, not a real repo problem). Did not touch `.git`. Nothing committed — next session with a working git should commit: `scripts/Tree.gd`, `scenes/props/Tree.tscn`, `scripts/Player.gd`, `scenes/world/Main.tscn`, `PROGRESS.md`, and ideally delete the two stray placeholder files. Next session should pick up "Basic inventory (numbers only)" — a good time to migrate `wood_count` off Player and into the new autoload.
 - **2026-07-10 (setup)** — Created this file, initialized git, set up hourly scheduled task. No feature work yet — next session should start on "Chop a cube tree."
 
 ## Notes for future sessions
