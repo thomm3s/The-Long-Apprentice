@@ -128,16 +128,74 @@ func _physics_process(delta):
 
 ## 10. Build Order / Milestones
 
-1. Gray-box prototype: move, chop a cube tree, pick up wood, place one building piece
-2. Add skill-by-practice system on 2-3 verbs (chopping, combat swing, running)
-3. Basic survival stats (hunger/stamina) + day/night cycle
-4. First combat pass + one enemy type
-5. First magic verb (e.g. fire spell), tied into the same practice system as physical skills
-6. One small hand-built biome (replacing gray-box test level)
-7. Procedural generation — only after the hand-built version proves the loop is fun
-8. Story/quest layer — last, once world + systems exist to hang it on
+*This is the long-term roadmap, organized into phases. Each phase is a "long-term goal" — too big to act on directly. When the active Task Queue (in `PROGRESS.md`) runs low or empties, pull the next unstarted phase from here, break it down into small (~20-minute) concrete action items, and add those to the Task Queue. Phases are ordered by dependency, not necessarily by how "fun" or important they are — earlier phases unblock later ones.*
 
-**Time estimate for the scrappy first playable (solo, AI-assisted, no art):** ~15-25 focused hours
+**Phase 0 — Gray-box prototype** *(current focus, tracked in PROGRESS.md)*
+- Move, chop a cube tree, pick up wood, place one building piece
+
+**Phase 1 — Skill-by-practice foundation**
+- Skill-by-practice system on 2-3 verbs (chopping, combat swing, running)
+- Perk/threshold unlocks for at least one verb, communicated to the player somehow (bar, message, or felt-only — pick one and test it)
+- Lock down skill-decay and diminishing-returns rules (design decision, see section 4)
+
+**Phase 2 — Survival & atmosphere basics**
+- Hunger/stamina stats with simple UI
+- Day/night cycle
+- `WorldEnvironment` pass: fog, lighting, color grading for a first taste of mood
+- Sleep/bed interaction (skip to morning, safety net for hunger/stamina)
+
+**Phase 3 — Combat & first enemy**
+- Basic combat pass (attack, hit detection, damage, death)
+- One enemy type with simple AI (chase/attack)
+- Player death/respawn flow
+
+**Phase 4 — Magic system**
+- First magic verb (e.g. fire spell) tied into the same practice system as physical skills
+- Resource cost for casting (mana, stamina, or cooldown — pick one)
+- Second magic verb once the first proves the pattern works
+
+**Phase 5 — Crafting & building depth**
+- Basic inventory UI (icons, not just numbers)
+- Simple crafting recipes (combine resources -> item, via a menu)
+- Building snapping/grid + at least 2-3 building piece types (wall, floor, roof)
+- A basic workbench/station gating higher-tier recipes
+
+**Phase 6 — Hand-built biome**
+- One small hand-built biome (replacing the gray-box test level), populated with resources, the one enemy type, and points of interest
+- First non-placeholder assets (Kenney/Quaternius) swapped in for trees/rocks/props
+
+**Phase 7 — Procedural generation**
+- Only after Phase 6 proves the loop is fun on a hand-built level
+- Start with procedural placement of existing hand-built biome assets, not full terrain generation
+- Terrain/heightmap generation once placement-only procgen works
+
+**Phase 8 — Story & NPC layer**
+- Once world + systems exist to hang it on
+- One NPC with dialogue (even placeholder text) tied to a quest hook
+- First quest: a simple fetch/craft/deliver loop using existing systems (no new systems required)
+
+**Phase 9 — Polish & UX**
+- Settings menu (video, audio, key rebinding)
+- Save/load system
+- Audio: SFX for core actions (chop, hit, cast), basic ambient/music pass
+- Basic accessibility pass (subtitles for any dialogue, colorblind-safe UI check)
+
+**Phase 10 — Multiplayer**
+- Only after single-player loop is solid — multiplayer roughly doubles the work of everything it touches
+- Shared base storage sync (a Windrose-inspired low-friction pain point)
+- Basic client-server movement/combat sync for 2-4 players
+
+**Phase 11 — Platform & release prep**
+- Windows/Linux/Mac export configs, sanity-check each build
+- Performance pass (profiler check, especially once procgen/MultiMeshInstance3D is in play)
+- Steam/itch.io store page draft, code signing for Windows builds
+- External playtesting round + triage feedback into new Task Queue items
+
+**Phase 12 — Post-launch**
+- Balance pass from real playtest/player data
+- First content update scoped from player feedback (new biome, verb, or enemy — whichever the data supports)
+
+**Time estimate for the scrappy first playable (Phase 0, solo, AI-assisted, no art):** ~15-25 focused hours
 - Godot setup, player movement, camera: 2-4 hrs
 - Chop a cube "tree" → wood item: 2-3 hrs
 - Basic inventory (numbers only): 2-4 hrs
