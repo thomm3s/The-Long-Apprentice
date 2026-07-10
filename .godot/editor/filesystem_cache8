@@ -1,0 +1,15 @@
+ea4bc82a6ad023ab7ee23ee620429895
+::res://::1783709710
+The Long Apprentice - Brief.md::TextFile::-1::1783708644::0::1::::<><>::
+::res://addons/::1783709085
+::res://assets/::1783709085
+::res://assets/models/::1783709085
+::res://assets/textures/::1783709085
+::res://scenes/::1783709085
+::res://scenes/player/::1783709085
+Player.tscn::PackedScene::-1::1783709109::0::1::::<><>::res://scripts/Player.gd
+::res://scenes/props/::1783709085
+::res://scenes/world/::1783709085
+Main.tscn::PackedScene::-1::1783709132::0::1::::<><>::res://scenes/player/Player.tscn
+::res://scripts/::1783709085
+Player.gd::GDScript::-1::1783709091::0::1::::<>CharacterBody3D<>::
