@@ -1,11 +1,14 @@
 extends CharacterBody3D
 
 const SPEED = 5.0
+const SPRINT_SPEED = SPEED * 1.6
+const SPRINT_PRACTICE_INTERVAL = 3.0
 const JUMP_VELOCITY = 4.5
 const INTERACT_RANGE = 3.0
 const PLACE_RANGE = 10.0
 const BLOCK_SCENE: PackedScene = preload("res://scenes/props/Block.tscn")
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
+var _sprint_held_time: float = 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
@@ -52,11 +55,27 @@ func _physics_process(delta):
 
 	var input_dir = Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var direction = (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+	var sprinting: bool = direction != Vector3.ZERO and Input.is_action_pressed("sprint")
+	_track_sprint(sprinting, delta)
+
 	if direction:
-		velocity.x = direction.x * SPEED
-		velocity.z = direction.z * SPEED
+		var speed: float = SPRINT_SPEED if sprinting else SPEED
+		velocity.x = direction.x * speed
+		velocity.z = direction.z * speed
 	else:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
 		velocity.z = move_toward(velocity.z, 0, SPEED)
 
 	move_and_slide()
+
+## Practices "running" every SPRINT_PRACTICE_INTERVAL seconds of continuous
+## sprinting; releasing sprint (or stopping) resets the held-time count, so
+## only sustained sprinting counts, not tapping the key.
+func _track_sprint(sprinting: bool, delta: float) -> void:
+	if not sprinting:
+		_sprint_held_time = 0.0
+		return
+	_sprint_held_time += delta
+	while _sprint_held_time >= SPRINT_PRACTICE_INTERVAL:
+		Skills.practice("running", 1)
+		_sprint_held_time -= SPRINT_PRACTICE_INTERVAL
