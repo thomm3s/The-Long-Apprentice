@@ -9,6 +9,7 @@ const TOAST_DURATION: float = 3.0
 @onready var hunger_bar: ProgressBar = $HungerBar
 @onready var stamina_bar: ProgressBar = $StaminaBar
 @onready var health_bar: ProgressBar = $HealthBar
+@onready var mana_bar: ProgressBar = $ManaBar
 
 func _ready() -> void:
 	Inventory.changed.connect(_on_inventory_changed)
@@ -23,6 +24,7 @@ func _ready() -> void:
 	_refresh_chopping()
 	hunger_bar.value = Stats.get_value("hunger")
 	stamina_bar.value = Stats.get_value("stamina")
+	mana_bar.value = Stats.get_value("mana")
 	_connect_player_health()
 
 ## The player is a sibling instanced in Main.tscn, so look it up by group
@@ -58,6 +60,8 @@ func _on_stat_changed(stat_name: String, new_value: float) -> void:
 			hunger_bar.value = new_value
 		"stamina":
 			stamina_bar.value = new_value
+		"mana":
+			mana_bar.value = new_value
 
 func _on_milestone_reached(skill_name: String, threshold: int, _new_count: int) -> void:
 	show_toast("%s milestone! (%d practices)" % [skill_name.capitalize(), threshold])
