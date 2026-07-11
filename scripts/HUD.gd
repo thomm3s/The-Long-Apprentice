@@ -34,6 +34,7 @@ func _connect_player_health() -> void:
 		return
 	var health: Node = player.get_node("Health")
 	health.health_changed.connect(func(new_health: float): health_bar.value = new_health)
+	health.died.connect(func(): show_toast("You died"))
 	health_bar.max_value = health.max_health
 	health_bar.value = health.health
 

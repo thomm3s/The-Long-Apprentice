@@ -14,6 +14,23 @@ const ATTACK_DAMAGE = 25.0
 const BLOCK_SCENE: PackedScene = preload("res://scenes/props/Block.tscn")
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _sprint_held_time: float = 0.0
+var _spawn_position: Vector3
+
+@onready var health: Node = $Health
+
+func _ready() -> void:
+	_spawn_position = position
+	health.died.connect(_on_died)
+
+## Dying is a respawn, not a game over: back to spawn with health and
+## survival stats refilled. The HUD shows the "You died" toast off the same
+## died signal, so nothing here talks to UI.
+func _on_died() -> void:
+	position = _spawn_position
+	velocity = Vector3.ZERO
+	health.refill()
+	Stats.add("hunger", Stats.MAX_VALUE)
+	Stats.add("stamina", Stats.MAX_VALUE)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
