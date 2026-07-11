@@ -5,6 +5,7 @@ const SPRINT_SPEED = SPEED * 1.6
 const SPRINT_PRACTICE_INTERVAL = 3.0
 const STAMINA_DRAIN_PER_SEC = 100.0 / 15.0 # empties in 15s of continuous sprint
 const STAMINA_REGEN_PER_SEC = 100.0 / 8.0 # refills in 8s while not sprinting
+const STARVING_SPEED_MULT = 0.5 # movement penalty while hunger sits at 0
 const JUMP_VELOCITY = 4.5
 const INTERACT_RANGE = 3.0
 const PLACE_RANGE = 10.0
@@ -70,7 +71,7 @@ func _physics_process(delta):
 	_track_sprint(sprinting, delta)
 
 	if direction:
-		var speed: float = SPRINT_SPEED if sprinting else SPEED
+		var speed: float = _current_speed(sprinting)
 		velocity.x = direction.x * speed
 		velocity.z = direction.z * speed
 	else:
@@ -78,6 +79,15 @@ func _physics_process(delta):
 		velocity.z = move_toward(velocity.z, 0, SPEED)
 
 	move_and_slide()
+
+## Movement speed for this frame: sprint bonus, then the starving penalty
+## while hunger sits at 0 (the hunger-zero consequence — gray-box only, no
+## damage/death from starving yet).
+func _current_speed(sprinting: bool) -> float:
+	var speed: float = SPRINT_SPEED if sprinting else SPEED
+	if Stats.get_value("hunger") <= 0.0:
+		speed *= STARVING_SPEED_MULT
+	return speed
 
 ## Practices "running" every SPRINT_PRACTICE_INTERVAL seconds of continuous
 ## sprinting; releasing sprint (or stopping) resets the held-time count, so
