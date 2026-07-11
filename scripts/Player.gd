@@ -11,7 +11,10 @@ const INTERACT_RANGE = 3.0
 const PLACE_RANGE = 10.0
 const ATTACK_RANGE = 2.5
 const ATTACK_DAMAGE = 25.0
+const CAST_FIRE_COST = 25.0
+const FIREBALL_SPAWN_OFFSET = 1.0 # ahead of the camera, so it doesn't spawn inside the player
 const BLOCK_SCENE: PackedScene = preload("res://scenes/props/Block.tscn")
+const FIREBALL_SCENE: PackedScene = preload("res://scenes/props/Fireball.tscn")
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _sprint_held_time: float = 0.0
 var _spawn_position: Vector3
@@ -39,6 +42,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_try_place_block()
 	elif event.is_action_pressed("attack"):
 		_try_attack()
+	elif event.is_action_pressed("cast_fire"):
+		_try_cast_fire()
 
 ## Raycast from the camera along its view direction, out to max_range.
 func _camera_raycast(max_range: float) -> Dictionary:
@@ -85,6 +90,27 @@ func _try_attack() -> void:
 	var target: Node = result.collider
 	if target.is_in_group("damageable") and target.has_node("Health"):
 		target.get_node("Health").take_damage(ATTACK_DAMAGE)
+
+## Pure so it's probe-able headless without needing tree membership (see
+## PROGRESS.md's Notes for future sessions) — same pattern as
+## Fireball._forward_motion / Enemy._chase_direction.
+static func _can_afford_cast(mana: float, cost: float) -> bool:
+	return mana >= cost
+
+## Casting costs mana, spent up front: a no-mana attempt is a silent no-op
+## and does NOT practice "fire_magic" (unlike combat, where whiffs still
+## train — here the resource cost is what counts as practice, per the
+## Brief's framing of magic practice).
+func _try_cast_fire() -> void:
+	if not _can_afford_cast(Stats.get_value("mana"), CAST_FIRE_COST):
+		return
+	var camera: Camera3D = $Camera3D
+	var fireball: Area3D = FIREBALL_SCENE.instantiate()
+	get_tree().current_scene.add_child(fireball)
+	fireball.global_transform = camera.global_transform
+	fireball.global_position += -camera.global_transform.basis.z * FIREBALL_SPAWN_OFFSET
+	Stats.add("mana", -CAST_FIRE_COST)
+	Skills.practice("fire_magic", 1)
 
 func _physics_process(delta):
 	if not is_on_floor():
