@@ -13,8 +13,15 @@ const ATTACK_RANGE = 2.5
 const ATTACK_DAMAGE = 25.0
 const CAST_FIRE_COST = 25.0
 const FIREBALL_SPAWN_OFFSET = 1.0 # ahead of the camera, so it doesn't spawn inside the player
+## Cast cooldown shrinks from START toward FLOOR as fire_magic practice grows
+## (Brief: "cast duration can be decreased by practicing"). SCALE is the
+## practice count at which the gap to FLOOR has halved.
+const CAST_COOLDOWN_START = 2.0
+const CAST_COOLDOWN_FLOOR = 0.4
+const CAST_COOLDOWN_PRACTICE_SCALE = 20.0
 const BLOCK_SCENE: PackedScene = preload("res://scenes/props/Block.tscn")
 const FIREBALL_SCENE: PackedScene = preload("res://scenes/props/Fireball.tscn")
+var _cast_cooldown_remaining: float = 0.0
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _sprint_held_time: float = 0.0
 var _spawn_position: Vector3
@@ -97,11 +104,24 @@ func _try_attack() -> void:
 static func _can_afford_cast(mana: float, cost: float) -> bool:
 	return mana >= cost
 
-## Casting costs mana, spent up front: a no-mana attempt is a silent no-op
-## and does NOT practice "fire_magic" (unlike combat, where whiffs still
-## train — here the resource cost is what counts as practice, per the
-## Brief's framing of magic practice).
+static func _cast_ready(cooldown_remaining: float) -> bool:
+	return cooldown_remaining <= 0.0
+
+## Cooldown duration for the NEXT cast, given how many times fire_magic has
+## been practiced so far — approaches CAST_COOLDOWN_FLOOR but never reaches
+## it, so practice always helps but casting is never truly instant.
+static func _cast_cooldown_for_practice(practice_count: int) -> float:
+	var t: float = float(practice_count) / CAST_COOLDOWN_PRACTICE_SCALE
+	return CAST_COOLDOWN_FLOOR + (CAST_COOLDOWN_START - CAST_COOLDOWN_FLOOR) / (1.0 + t)
+
+## Casting costs mana, spent up front: a no-mana attempt (or one still on
+## cooldown) is a silent no-op and does NOT practice "fire_magic" (unlike
+## combat, where whiffs still train — here the resource cost is what counts
+## as practice, per the Brief's framing of magic practice). A successful
+## cast starts a cooldown that shrinks as fire_magic is practiced more.
 func _try_cast_fire() -> void:
+	if not _cast_ready(_cast_cooldown_remaining):
+		return
 	if not _can_afford_cast(Stats.get_value("mana"), CAST_FIRE_COST):
 		return
 	var camera: Camera3D = $Camera3D
@@ -111,8 +131,11 @@ func _try_cast_fire() -> void:
 	fireball.global_position += -camera.global_transform.basis.z * FIREBALL_SPAWN_OFFSET
 	Stats.add("mana", -CAST_FIRE_COST)
 	Skills.practice("fire_magic", 1)
+	_cast_cooldown_remaining = _cast_cooldown_for_practice(Skills.get_count("fire_magic"))
 
 func _physics_process(delta):
+	if _cast_cooldown_remaining > 0.0:
+		_cast_cooldown_remaining = max(_cast_cooldown_remaining - delta, 0.0)
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 	if Input.is_action_just_pressed("jump") and is_on_floor():
