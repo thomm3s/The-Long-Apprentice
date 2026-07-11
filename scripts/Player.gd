@@ -28,7 +28,9 @@ func _try_interact() -> void:
 	var to: Vector3 = from + (-camera.global_transform.basis.z) * INTERACT_RANGE
 	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, to)
 	var result: Dictionary = space_state.intersect_ray(query)
-	if result and result.collider.is_in_group("choppable") and result.collider.has_method("chop"):
+	if not result:
+		return
+	if result.collider.is_in_group("choppable") and result.collider.has_method("chop"):
 		result.collider.chop()
 		var next_threshold: int = Skills.get_next_threshold("chopping")
 		Skills.practice("chopping", 1)
@@ -36,6 +38,8 @@ func _try_interact() -> void:
 		var wood_gain: int = 2 if Skills.get_count("chopping") >= next_threshold else 1
 		Inventory.add("wood", wood_gain)
 		print("Wood: ", Inventory.get_count("wood"))
+	elif result.collider.is_in_group("sleepable") and result.collider.has_method("sleep_in"):
+		result.collider.sleep_in()
 
 func _try_place_block() -> void:
 	if Inventory.get_count("wood") <= 0:
