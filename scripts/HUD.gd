@@ -8,6 +8,7 @@ const TOAST_DURATION: float = 3.0
 @onready var toast_timer: Timer = $ToastTimer
 @onready var hunger_bar: ProgressBar = $HungerBar
 @onready var stamina_bar: ProgressBar = $StaminaBar
+@onready var health_bar: ProgressBar = $HealthBar
 
 func _ready() -> void:
 	Inventory.changed.connect(_on_inventory_changed)
@@ -22,6 +23,19 @@ func _ready() -> void:
 	_refresh_chopping()
 	hunger_bar.value = Stats.get_value("hunger")
 	stamina_bar.value = Stats.get_value("stamina")
+	_connect_player_health()
+
+## The player is a sibling instanced in Main.tscn, so look it up by group
+## rather than a hardcoded path; guard against HUD reuse in player-less
+## scenes.
+func _connect_player_health() -> void:
+	var player: Node = get_tree().get_first_node_in_group("player")
+	if player == null or not player.has_node("Health"):
+		return
+	var health: Node = player.get_node("Health")
+	health.health_changed.connect(func(new_health: float): health_bar.value = new_health)
+	health_bar.max_value = health.max_health
+	health_bar.value = health.health
 
 func _on_inventory_changed(item_name: String, _new_count: int) -> void:
 	if item_name == "wood":

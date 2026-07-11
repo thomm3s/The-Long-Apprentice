@@ -55,6 +55,23 @@ max_value = 100.0
 value = 100.0
 show_percentage = false
 
+[node name="HealthLabel" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 132.0
+offset_right = 96.0
+offset_bottom = 154.0
+theme_override_font_sizes/font_size = 14
+text = "Health"
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+offset_left = 100.0
+offset_top = 134.0
+offset_right = 260.0
+offset_bottom = 152.0
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
 [node name="ToastLabel" type="Label" parent="."]
 offset_left = 340.0
 offset_top = 16.0
