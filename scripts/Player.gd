@@ -9,6 +9,8 @@ const STARVING_SPEED_MULT = 0.5 # movement penalty while hunger sits at 0
 const JUMP_VELOCITY = 4.5
 const INTERACT_RANGE = 3.0
 const PLACE_RANGE = 10.0
+const ATTACK_RANGE = 2.5
+const ATTACK_DAMAGE = 25.0
 const BLOCK_SCENE: PackedScene = preload("res://scenes/props/Block.tscn")
 var gravity = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _sprint_held_time: float = 0.0
@@ -21,13 +23,18 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("attack"):
 		_try_attack()
 
-func _try_interact() -> void:
+## Raycast from the camera along its view direction, out to max_range.
+func _camera_raycast(max_range: float) -> Dictionary:
 	var camera: Camera3D = $Camera3D
 	var space_state: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state
 	var from: Vector3 = camera.global_position
-	var to: Vector3 = from + (-camera.global_transform.basis.z) * INTERACT_RANGE
+	var to: Vector3 = from + (-camera.global_transform.basis.z) * max_range
 	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, to)
-	var result: Dictionary = space_state.intersect_ray(query)
+	query.exclude = [get_rid()]
+	return space_state.intersect_ray(query)
+
+func _try_interact() -> void:
+	var result: Dictionary = _camera_raycast(INTERACT_RANGE)
 	if not result:
 		return
 	if result.collider.is_in_group("choppable") and result.collider.has_method("chop"):
@@ -44,24 +51,23 @@ func _try_interact() -> void:
 func _try_place_block() -> void:
 	if Inventory.get_count("wood") <= 0:
 		return
-	var camera: Camera3D = $Camera3D
-	var space_state: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state
-	var from: Vector3 = camera.global_position
-	var to: Vector3 = from + (-camera.global_transform.basis.z) * PLACE_RANGE
-	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(from, to)
-	var result: Dictionary = space_state.intersect_ray(query)
+	var result: Dictionary = _camera_raycast(PLACE_RANGE)
 	if result:
 		var block: Node3D = BLOCK_SCENE.instantiate()
 		get_tree().current_scene.add_child(block)
 		block.global_position = result.position + result.normal * 0.5
 		Inventory.add("wood", -1)
 
-## Gray-box hook for the "combat" skill-practice verb — no hit
-## detection/damage yet (Phase 3's job), just registers the swing so the
-## practice counter and its perks/HUD progress work identically to the
-## other verbs once real combat lands.
+## Swing: always practices "combat" (whiffs train too, same as before),
+## and damages whatever damageable body with a Health child is in reach.
 func _try_attack() -> void:
 	Skills.practice("combat", 1)
+	var result: Dictionary = _camera_raycast(ATTACK_RANGE)
+	if not result:
+		return
+	var target: Node = result.collider
+	if target.is_in_group("damageable") and target.has_node("Health"):
+		target.get_node("Health").take_damage(ATTACK_DAMAGE)
 
 func _physics_process(delta):
 	if not is_on_floor():
