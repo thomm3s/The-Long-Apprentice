@@ -43,7 +43,6 @@ The two stray placeholder files (`scripts/_probe_test.gd`, `_validate.gd`) have 
 
 ## Task Queue (priority order — top first)
 
-- [ ] Phase 3 — Enemy melee attack: when in reach of the player, damage the player's `Health` on a cooldown timer (no animation, just the damage tick + a print).
 - [ ] Phase 3 — Player health + HUD bar: give `Player.tscn` a `Health` child, add a `HealthBar` to the HUD following the hunger/stamina bar pattern (subscribe to the player's `Health.damaged` — needs a signal route; simplest is a `player_health_changed` relay or the HUD finding the player via group).
 - [ ] Phase 3 — Player death/respawn flow: on the player's `Health.died`, reset position to spawn, refill health/hunger/stamina, and show a HUD toast ("You died") — no death screen yet, just the loop closing so dying isn't a dead end.
 
@@ -51,6 +50,7 @@ Phase 0 (gray-box prototype: move, chop a cube tree, pick up wood, place one bui
 
 ## Completed
 
+- [x] 2026-07-11 — Enemy melee attack: `scripts/Enemy.gd` (`MELEE_REACH = 2.0` — slightly past keep-distance so the enemy can hit from where the chase stops — `MELEE_DAMAGE = 10`, `MELEE_COOLDOWN = 1.5s`; `_physics_process` ticks the cooldown down and, when the static pure `_melee_ready(distance, cooldown)` says go, calls `_melee_attack(player)` which starts the cooldown and damages the target's `Health` child *if it has one* — the player doesn't yet (next queue item), so until then swings are harmless by design, no crash).
 - [x] 2026-07-11 — Enemy chase AI: `scripts/Enemy.gd` (`_physics_process` now applies gravity, looks up the player via `get_tree().get_first_node_in_group("player")`, and moves at `SPEED = 3.0` along `_chase_direction(from_pos, target_pos)` — a pure `static func` returning the flat XZ unit direction, or `ZERO` outside `AGGRO_RANGE = 12` or within `KEEP_DISTANCE = 1.5`; made static/pure specifically so it's probe-able headless, see the new Notes entry), `scenes/player/Player.tscn` (Player node added to new `player` group for the lookup).
 - [x] 2026-07-11 — `Enemy.tscn` placeholder: `scenes/props/Enemy.tscn` (new — `CharacterBody3D` red box, group `damageable`, `Health` child with `max_health = 50` so it dies to two player swings), `scripts/Enemy.gd` (new — connects `Health.died` → emits `enemy_died` and `queue_free()`s), `scenes/world/Main.tscn` (one Enemy instance at (8, 0, -10), away from spawn). No AI yet — it stands there and can be killed.
 - [x] 2026-07-11 — Attack hit detection: `scripts/Player.gd` (the three duplicated camera-raycast blocks — interact, place, attack — were consolidated into one `_camera_raycast(max_range)` helper that also excludes the player's own body via `query.exclude = [get_rid()]`; `_try_attack()` still practices "combat" on every swing — whiffs train too — then raycasts `ATTACK_RANGE = 2.5` and calls `take_damage(ATTACK_DAMAGE = 25.0)` on any hit body in group `damageable` with a `Health` child).
