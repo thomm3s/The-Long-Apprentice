@@ -15,6 +15,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_try_interact()
 	elif event.is_action_pressed("place_block"):
 		_try_place_block()
+	elif event.is_action_pressed("attack"):
+		_try_attack()
 
 func _try_interact() -> void:
 	var camera: Camera3D = $Camera3D
@@ -46,6 +48,13 @@ func _try_place_block() -> void:
 		get_tree().current_scene.add_child(block)
 		block.global_position = result.position + result.normal * 0.5
 		Inventory.add("wood", -1)
+
+## Gray-box hook for the "combat" skill-practice verb — no hit
+## detection/damage yet (Phase 3's job), just registers the swing so the
+## practice counter and its perks/HUD progress work identically to the
+## other verbs once real combat lands.
+func _try_attack() -> void:
+	Skills.practice("combat", 1)
 
 func _physics_process(delta):
 	if not is_on_floor():
