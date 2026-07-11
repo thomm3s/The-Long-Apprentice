@@ -11,11 +11,16 @@ signal changed(stat_name: String, new_value: float)
 const MAX_VALUE: float = 100.0
 ## Placeholder pacing: hunger fully depletes over 10 real-time minutes.
 const HUNGER_DECAY_PER_SEC: float = MAX_VALUE / (10.0 * 60.0)
+## Placeholder pacing: mana fully regenerates from empty in 20 real seconds
+## (passive, unlike stamina which only regens when the player isn't
+## sprinting). No spending logic yet — that's the fire-spell cast item.
+const MANA_REGEN_PER_SEC: float = MAX_VALUE / 20.0
 
-var _values: Dictionary = {"hunger": MAX_VALUE, "stamina": MAX_VALUE}
+var _values: Dictionary = {"hunger": MAX_VALUE, "stamina": MAX_VALUE, "mana": MAX_VALUE}
 
 func _process(delta: float) -> void:
 	add("hunger", -HUNGER_DECAY_PER_SEC * delta)
+	add("mana", MANA_REGEN_PER_SEC * delta)
 
 func get_value(stat_name: String) -> float:
 	return _values.get(stat_name, MAX_VALUE)
