@@ -7,23 +7,30 @@
 An indie, small-team (2-3 people), open-world survival crafting game with a magic/fantasy theme.
 
 **Inspirations:**
+
 - **Valheim** — gather/craft/build loop, exploration, atmospheric mood built more through fog/lighting/color grading than raw polygon detail
 - **Windrose** — streamlined, low-friction survival systems (e.g. shared base storage, fast travel, forgiving mechanics) that cut the "faff" out of the genre
 - **Mark of the Fool** (book) — tone/progression inspiration only, *not* to be directly referenced due to IP concerns. The borrowed idea is the archetype underneath it: starting as a nobody and earning mastery purely through repetition — not the book's specific terms, characters, or branding.
 
 **Core pillars:**
+
 - Open world, survival + crafting + building
 - Magic system woven into the same progression system as physical skills
 - **Skills improve by doing them, not by spending abstract XP/levels** (Skyrim-like, not WoW-like)
 - Story/world tone: a bit dark-fantasy, atmospheric, character starts from nothing
 
+
+
 ## 2. Name
 
 **The Long Apprentice**
+
 - Signals the core mechanic: endless mastery through practice, never truly "finished" learning
 - Personal resonance for the dev (tall — "Long" double meaning)
 - Distinct from Mark of the Fool — no shared terms, titles, or characters
 - **TODO before getting attached:** check Steam, itch.io, and do a basic trademark search
+
+
 
 ## 3. Core Gameplay Loop
 
@@ -38,10 +45,12 @@ Everything else (story, procedural generation, magic depth, multiplayer) is cont
 - Each **verb** (chopping, mining, casting a spell, blocking, sneaking, running) has its own hidden counter that increases with use.
 - Counters unlock perks/efficiency at thresholds — not a global XP/level bar shared across everything.
 - Magic skills use the *same underlying system* as physical skills — casting a fire spell repeatedly should feel mechanically parallel to swinging an axe repeatedly.
-- **Open design questions to lock down before scaling this up:**
-  - Does a skill decay if unused?
-  - Are there diminishing returns to prevent grinding one action forever?
-  - How do perks/thresholds get communicated to the player (visible bar vs. felt-only improvement)?
+- **Design decisions (locked 2026-07-11, revisit during Phase 9 polish/balancing pass if playtesting says otherwise):**
+  - **Decay: none, for v1.** A skill's practice counter never decreases on its own. Rationale: this game's hook is "long apprentice" mastery-over-time, not upkeep — decay punishes a player for going off to practice a *different* skill (which the multi-verb design explicitly wants to encourage) and adds bookkeeping/anxiety that doesn't serve the fantasy. If future playtesting shows skill hoarding (players front-loading every verb early and never specializing) is a problem, the fix to try first is diminishing returns (below) or soft caps, not decay — decay is the last resort and would need its own design pass (grace period? only decays below a floor? only above some threshold?) rather than being bolted on.
+  - **Diminishing returns: yes, via widening perk-threshold spacing, not via shrinking counter increments.** The raw practice counter stays simple — every use of a verb always adds a flat `+1` (or `+1 * amount` for batched actions), no per-action value decay, so `Skills.gd`'s `practice()` call stays trivial and the counter remains a legible "times done" stat. What changes is the *gap between perks*: thresholds grow geometrically instead of linearly (e.g. roughly `10, 25, 55, 115, 235...` — each threshold ~2.1x the last, replacing the current flat `MILESTONE_INTERVAL = 10`) so early practice feels fast and rewarding, but grinding the same single verb for hours yields perks further and further apart, naturally pushing a player who wants continued visible progress toward practicing a *different* verb instead. This needs an actual threshold table/formula in `Skills.gd` (currently just `MILESTONE_INTERVAL = 10` flat) — tracked as a follow-up implementation task, not done in this design-note pass.
+  - **Communication: both a visible counter/progress-to-next-threshold AND an explicit unlock moment, not felt-only.** A felt-only stat change (e.g. chopping silently yielding 2 wood instead of 1) is easy for a player to miss entirely and misattribute to randomness. Plan: (a) HUD shows the current practice count for the skill in active use, ideally as "N / next threshold" once the threshold table exists, so progress is visible before the perk lands — this is already queued as "HUD: show the player's current chopping skill practice count"; (b) the moment a threshold is crossed, show a short on-screen toast/message (e.g. "Chopping mastery increased — trees now yield more wood") rather than only a console print — this is already queued as part of "Perk/threshold unlock for chopping"; (c) the underlying mechanical change itself should also be *felt* (more yield, faster action, new option) so the toast is confirming something the player will notice again on the next use, not the only signal. Both existing queue items already point at this outcome — no new queue items needed for communication itself, just make sure their implementation includes the toast, not just a console line.
+
+
 
 ## 5. Tech Stack
 
@@ -52,9 +61,12 @@ Everything else (story, procedural generation, magic depth, multiplayer) is cont
   - Unsigned Windows `.exe` triggers SmartScreen warnings — fine for early builds, sort out code signing closer to real launch.
   - Native code (GDExtension in C++/Rust) is harder to cross-compile — avoid until actually needed.
 
+
+
 ## 6. Project Setup Reference
 
 **Folder structure:**
+
 ```
 /scenes
   /player
@@ -68,16 +80,19 @@ Everything else (story, procedural generation, magic depth, multiplayer) is cont
 ```
 
 **Project Settings to configure early:**
+
 - Rendering → Renderer: Forward+ (default fine; Mobile only if perf becomes an issue)
 - Input Map: define actions early — `move_forward`, `move_back`, `move_left`, `move_right`, `jump`, `interact`, `attack` — bind via Input Map, not hardcoded keys in scripts
 - Display → Window → Size: e.g. 1280x720 for testing
 - Application → Run → Main Scene: set to your `Main.tscn`
 
 **First scenes:**
+
 - `player/Player.tscn` — `CharacterBody3D` + `CollisionShape3D` + `MeshInstance3D` (capsule placeholder) + `Player.gd`
 - `world/Main.tscn` — `Node3D` root + `WorldEnvironment` (for later fog/lighting) + ground `StaticBody3D` plane + Player instanced in
 
-**Starter movement script (`Player.gd`):**
+**Starter movement script (**`Player.gd`**):**
+
 ```gdscript
 extends CharacterBody3D
 
@@ -103,6 +118,8 @@ func _physics_process(delta):
     move_and_slide()
 ```
 
+
+
 ## 7. Reusable Components (the "swap 1000 trees" problem)
 
 - Never place raw meshes directly — always build a scene (`Tree.tscn`) once, then **instance** it everywhere.
@@ -110,6 +127,8 @@ func _physics_process(delta):
 - For variety: make a small pool of scenes (`Tree_Pine.tscn`, `Tree_Oak.tscn`, etc.) and randomize placement.
 - For very large counts (1000s+): use `MultiMeshInstance3D` for rendering efficiency, still editable from one source mesh.
 - Conclusion: safe to build with placeholder assets now — swapping later is cheap.
+
+
 
 ## 8. Asset Sources (free/cheap, good for prototyping)
 
@@ -128,74 +147,88 @@ func _physics_process(delta):
 
 ## 10. Build Order / Milestones
 
-*This is the long-term roadmap, organized into phases. Each phase is a "long-term goal" — too big to act on directly. When the active Task Queue (in `PROGRESS.md`) runs low or empties, pull the next unstarted phase from here, break it down into small (~20-minute) concrete action items, and add those to the Task Queue. Phases are ordered by dependency, not necessarily by how "fun" or important they are — earlier phases unblock later ones.*
+*This is the long-term roadmap, organized into phases. Each phase is a "long-term goal" — too big to act on directly. When the active Task Queue (in* `PROGRESS.md`*) runs low or empties, pull the next unstarted phase from here, break it down into small (~20-minute) concrete action items, and add those to the Task Queue. Phases are ordered by dependency, not necessarily by how "fun" or important they are — earlier phases unblock later ones.*
 
 **Phase 0 — Gray-box prototype** *(current focus, tracked in PROGRESS.md)*
+
 - Move, chop a cube tree, pick up wood, place one building piece
 
 **Phase 1 — Skill-by-practice foundation**
+
 - Skill-by-practice system on 2-3 verbs (chopping, combat swing, running)
 - Perk/threshold unlocks for at least one verb, communicated to the player somehow (bar, message, or felt-only — pick one and test it)
 - Lock down skill-decay and diminishing-returns rules (design decision, see section 4)
 
 **Phase 2 — Survival & atmosphere basics**
+
 - Hunger/stamina stats with simple UI
 - Day/night cycle
 - `WorldEnvironment` pass: fog, lighting, color grading for a first taste of mood
 - Sleep/bed interaction (skip to morning, safety net for hunger/stamina)
 
 **Phase 3 — Combat & first enemy**
+
 - Basic combat pass (attack, hit detection, damage, death)
 - One enemy type with simple AI (chase/attack)
 - Player death/respawn flow
 
 **Phase 4 — Magic system**
+
 - First magic verb (e.g. fire spell) tied into the same practice system as physical skills
-- Resource cost for casting (mana, stamina, or cooldown — pick one)
+- Resource cost for casting (mana and cast duration. Cast duration can be decreased by practicing)
 - Second magic verb once the first proves the pattern works
 
 **Phase 5 — Crafting & building depth**
+
 - Basic inventory UI (icons, not just numbers)
 - Simple crafting recipes (combine resources -> item, via a menu)
 - Building snapping/grid + at least 2-3 building piece types (wall, floor, roof)
 - A basic workbench/station gating higher-tier recipes
 
 **Phase 6 — Hand-built biome**
+
 - One small hand-built biome (replacing the gray-box test level), populated with resources, the one enemy type, and points of interest
 - First non-placeholder assets (Kenney/Quaternius) swapped in for trees/rocks/props
 
 **Phase 7 — Procedural generation**
+
 - Only after Phase 6 proves the loop is fun on a hand-built level
 - Start with procedural placement of existing hand-built biome assets, not full terrain generation
 - Terrain/heightmap generation once placement-only procgen works
 
 **Phase 8 — Story & NPC layer**
+
 - Once world + systems exist to hang it on
 - One NPC with dialogue (even placeholder text) tied to a quest hook
 - First quest: a simple fetch/craft/deliver loop using existing systems (no new systems required)
 
 **Phase 9 — Polish & UX**
+
 - Settings menu (video, audio, key rebinding)
 - Save/load system
 - Audio: SFX for core actions (chop, hit, cast), basic ambient/music pass
 - Basic accessibility pass (subtitles for any dialogue, colorblind-safe UI check)
 
 **Phase 10 — Multiplayer**
+
 - Only after single-player loop is solid — multiplayer roughly doubles the work of everything it touches
 - Shared base storage sync (a Windrose-inspired low-friction pain point)
 - Basic client-server movement/combat sync for 2-4 players
 
 **Phase 11 — Platform & release prep**
+
 - Windows/Linux/Mac export configs, sanity-check each build
 - Performance pass (profiler check, especially once procgen/MultiMeshInstance3D is in play)
 - Steam/itch.io store page draft, code signing for Windows builds
 - External playtesting round + triage feedback into new Task Queue items
 
 **Phase 12 — Post-launch**
+
 - Balance pass from real playtest/player data
 - First content update scoped from player feedback (new biome, verb, or enemy — whichever the data supports)
 
 **Time estimate for the scrappy first playable (Phase 0, solo, AI-assisted, no art):** ~15-25 focused hours
+
 - Godot setup, player movement, camera: 2-4 hrs
 - Chop a cube "tree" → wood item: 2-3 hrs
 - Basic inventory (numbers only): 2-4 hrs
@@ -205,11 +238,15 @@ func _physics_process(delta):
 - Add 1-2 days buffer if new to Godot's editor/node system
 - Multiplayer roughly doubles everything — prototype single-player first
 
+
+
 ## 11. Team Shape (2-3 people)
 
 - 1 gameplay/systems programmer (dev, using Go/web background + AI assistance to ramp on Godot)
 - 1 generalist artist — modular, stylized-low-poly assets recommended over realism for small-team speed
 - Design/writing/story shared, but one clear owner to keep tone consistent
+
+
 
 ## 12. Next Steps (pick up here in a new chat)
 
