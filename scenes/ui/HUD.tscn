@@ -21,6 +21,40 @@ offset_bottom = 76.0
 theme_override_font_sizes/font_size = 18
 text = "Chopping: 0 / 10"
 
+[node name="HungerLabel" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 80.0
+offset_right = 96.0
+offset_bottom = 102.0
+theme_override_font_sizes/font_size = 14
+text = "Hunger"
+
+[node name="HungerBar" type="ProgressBar" parent="."]
+offset_left = 100.0
+offset_top = 82.0
+offset_right = 260.0
+offset_bottom = 100.0
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="StaminaLabel" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 106.0
+offset_right = 96.0
+offset_bottom = 128.0
+theme_override_font_sizes/font_size = 14
+text = "Stamina"
+
+[node name="StaminaBar" type="ProgressBar" parent="."]
+offset_left = 100.0
+offset_top = 108.0
+offset_right = 260.0
+offset_bottom = 126.0
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
 [node name="ToastLabel" type="Label" parent="."]
 offset_left = 340.0
 offset_top = 16.0
