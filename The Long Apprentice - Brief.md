@@ -28,7 +28,7 @@ An indie, small-team (2-3 people), open-world survival crafting game with a magi
 - Signals the core mechanic: endless mastery through practice, never truly "finished" learning
 - Personal resonance for the dev (tall — "Long" double meaning)
 - Distinct from Mark of the Fool — no shared terms, titles, or characters
-- **TODO before getting attached:** check Steam, itch.io, and do a basic trademark search
+- **Name check (informal, 2026-07-11):** web searches against Steam, itch.io, and general trademark/product results found no game, book, film, or registered product titled exactly "The Long Apprentice." "Apprentice" alone is heavily used (e.g. *The Apprentice*, *Light Apprentice*, *The Toymaker's Apprentice*, *The Dragon Apprentice*, *The Librarian's Apprentice*, *The Fool's Apprentice*, plus the Trump/NBC *The Apprentice* TV franchise and its games) but none combine it with "Long," so no exact or near-exact collision surfaced. **Caveat:** this was informal web search only, not a formal USPTO TESS trademark search or a full Steam/itch.io storefront title-search (those weren't directly queryable via the tools available this session) — worth a proper USPTO search (tmsearch.uspto.gov) and a manual Steam/itch.io storefront search before committing to the name commercially (e.g. before a store page or any public release), since "Apprentice"-titled games are common enough that a formal check is cheap insurance. No blocker found for continued dev use of the name.
 
 
 
@@ -250,7 +250,7 @@ func _physics_process(delta):
 
 ## 12. Next Steps (pick up here in a new chat)
 
-- [ ] "Chop a cube tree" interaction script
-- [ ] Placeholder logo / title screen for the prototype
-- [ ] Lock down skill-decay and diminishing-returns rules for the practice system
-- [ ] Name check: Steam/itch.io search + trademark search for "The Long Apprentice"
+- [x] "Chop a cube tree" interaction script
+- [x] Placeholder logo / title screen for the prototype
+- [x] Lock down skill-decay and diminishing-returns rules for the practice system
+- [x] Name check: Steam/itch.io search + trademark search for "The Long Apprentice" (informal pass — see section 2; formal USPTO/storefront search still recommended before commercial release)
