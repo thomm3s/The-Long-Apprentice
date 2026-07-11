@@ -23,6 +23,7 @@ func _try_interact() -> void:
 	if result and result.collider.is_in_group("choppable") and result.collider.has_method("chop"):
 		result.collider.chop()
 		Inventory.add("wood", 1)
+		Skills.practice("chopping", 1)
 		print("Wood: ", Inventory.get_count("wood"))
 
 func _try_place_block() -> void:

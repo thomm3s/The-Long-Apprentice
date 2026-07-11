@@ -21,6 +21,7 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 [autoload]
 
 Inventory="*res://scripts/Inventory.gd"
+Skills="*res://scripts/Skills.gd"
 
 [display]
 
