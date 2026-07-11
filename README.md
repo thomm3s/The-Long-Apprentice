@@ -13,12 +13,13 @@ An open-world survival crafting game with a magic/fantasy theme, built in Godot 
 3. Press **F5** (or click the **Play** button in the top-right).
 4. On the title screen, click **Start** to enter the world.
 
-The main scene is `scenes/world/Main.tscn` — a small 3D test level with trees, a bed, a red-box enemy, and placeholder building blocks.
+The main scene is `scenes/world/Main.tscn` — a small 3D first-person test level with trees, a bed, a red-box enemy, and placeholder building blocks.
 
 ## Controls
 
 | Action | Key |
 |--------|-----|
+| Look around | Mouse |
 | Move | W A S D |
 | Sprint | Shift |
 | Jump | Space |
@@ -26,6 +27,9 @@ The main scene is `scenes/world/Main.tscn` — a small 3D test level with trees,
 | Melee attack | Left mouse button |
 | Place building block | Right mouse button |
 | Cast fire bolt | R |
+| Release mouse cursor | Escape |
+
+Click inside the game window to recapture the mouse after pressing Escape.
 
 ## Fire bolts
 
