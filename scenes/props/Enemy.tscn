@@ -1,0 +1,29 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/Enemy.gd" id="1_enemy_script"]
+[ext_resource type="Script" path="res://scripts/Health.gd" id="2_health_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.8, 1.6, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(0.8, 1.6, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.75, 0.15, 0.15, 1)
+
+[node name="Enemy" type="CharacterBody3D" groups=["damageable"]]
+script = ExtResource("1_enemy_script")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+mesh = SubResource("BoxMesh_1")
+surface_material_override/0 = SubResource("StandardMaterial3D_1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_health_script")
+max_health = 50.0
