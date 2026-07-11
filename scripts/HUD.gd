@@ -4,6 +4,7 @@ const TOAST_DURATION: float = 3.0
 
 @onready var wood_label: Label = $WoodLabel
 @onready var chopping_label: Label = $ChoppingLabel
+@onready var fire_magic_label: Label = $FireMagicLabel
 @onready var toast_label: Label = $ToastLabel
 @onready var toast_timer: Timer = $ToastTimer
 @onready var hunger_bar: ProgressBar = $HungerBar
@@ -22,6 +23,7 @@ func _ready() -> void:
 	toast_timer.timeout.connect(_on_toast_timeout)
 	_refresh("wood")
 	_refresh_chopping()
+	_refresh_fire_magic()
 	hunger_bar.value = Stats.get_value("hunger")
 	stamina_bar.value = Stats.get_value("stamina")
 	mana_bar.value = Stats.get_value("mana")
@@ -50,9 +52,14 @@ func _refresh(item_name: String) -> void:
 func _on_skill_practiced(skill_name: String, _new_count: int) -> void:
 	if skill_name == "chopping":
 		_refresh_chopping()
+	elif skill_name == "fire_magic":
+		_refresh_fire_magic()
 
 func _refresh_chopping() -> void:
 	chopping_label.text = "Chopping: %d / %d" % [Skills.get_count("chopping"), Skills.get_next_threshold("chopping")]
+
+func _refresh_fire_magic() -> void:
+	fire_magic_label.text = "Fire Magic: %d / %d" % [Skills.get_count("fire_magic"), Skills.get_next_threshold("fire_magic")]
 
 func _on_stat_changed(stat_name: String, new_value: float) -> void:
 	match stat_name:

@@ -89,6 +89,14 @@ max_value = 100.0
 value = 100.0
 show_percentage = false
 
+[node name="FireMagicLabel" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 184.0
+offset_right = 260.0
+offset_bottom = 212.0
+theme_override_font_sizes/font_size = 18
+text = "Fire Magic: 0 / 10"
+
 [node name="ToastLabel" type="Label" parent="."]
 offset_left = 340.0
 offset_top = 16.0
