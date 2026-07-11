@@ -13,6 +13,14 @@ offset_bottom = 48.0
 theme_override_font_sizes/font_size = 24
 text = "Wood: 0"
 
+[node name="ChoppingLabel" type="Label" parent="."]
+offset_left = 16.0
+offset_top = 48.0
+offset_right = 260.0
+offset_bottom = 76.0
+theme_override_font_sizes/font_size = 18
+text = "Chopping: 0 / 10"
+
 [node name="ToastLabel" type="Label" parent="."]
 offset_left = 340.0
 offset_top = 16.0
