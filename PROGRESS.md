@@ -4,16 +4,18 @@
 
 ## How this file is used
 
-Every hourly session:
+Every hourly session works through **3 Task Queue items, one after another**, each scoped small (roughly what used to be "one ~20-minute item," which in practice runs more like 5 minutes — the point is item *scope*, not a literal clock budget):
 1. Read this whole file.
-2. If the **Task Queue** has fewer than ~3 items left (including empty), top it up first: open `The Long Apprentice - Brief.md` section 10 (Build Order/Milestones), find the next unstarted **Phase**, and break it into 5-10 concrete, small (~20-minute) action items appended to the Task Queue below. This decomposition step itself counts as a valid session if it eats the time budget — it's fine to spend a whole run just planning, then stop without touching code.
-3. Pick the top unchecked item in **Task Queue** and work on it for ~20 minutes (one focused increment — don't try to finish the whole milestone in one go).
-4. Validate changes (see Validation below).
-5. Commit to git with a clear message.
-6. Update this file: check off / move completed items, add a **Session Log** entry, add any new sub-tasks discovered.
-7. Stop.
+2. If the **Task Queue** has fewer than ~3 items left (including empty), top it up first: open `The Long Apprentice - Brief.md` section 10 (Build Order/Milestones), find the next unstarted **Phase**, and break it into 5-10 concrete, small (~20-minute) action items appended to the Task Queue below. Re-check queue depth before each of the 3 items below and top up again if it runs dry mid-session. If decomposition alone eats the whole time budget, that's a valid session on its own — stop there without touching code.
+3. Do the following 3 times in a row (skip remaining repeats and stop early if you hit a genuine blocker or the overall time budget):
+   a. Pick the top unchecked item in **Task Queue** and implement it (~20 min, one focused vertical slice — don't try to finish a whole milestone in one item).
+   b. Validate changes (see Validation below). Don't move on if validation fails — fix it or stop and log the blocker.
+   c. Commit to git with a clear message for that item.
+   d. Check off that item in the Task Queue below before starting the next one.
+4. After the 3 items (or however many you completed before stopping), add ONE **Session Log** entry covering all of them, update Current Status if it meaningfully changed, and add any new sub-tasks discovered.
+5. Stop. Do not start a 4th item even if time remains.
 
-If a queue item is too big to finish in 20 minutes, split it into a smaller sub-task, do the sub-task, and leave the rest in the queue. When a Phase from the Brief is fully decomposed and completed, mark it done in the Brief's section 10 (or note it here) and move to the next Phase.
+If a queue item is too big to finish in 20 minutes, split it into a smaller sub-task, do the sub-task, and leave the rest in the queue (this still counts as one of the 3). When a Phase from the Brief is fully decomposed and completed, mark it done in the Brief's section 10 (or note it here) and move to the next Phase.
 
 ## Validation (do this before committing)
 
@@ -41,16 +43,15 @@ The two stray placeholder files (`scripts/_probe_test.gd`, `_validate.gd`) have 
 
 ## Task Queue (priority order — top first)
 
-- [ ] Perk/threshold unlock for chopping: at a practice milestone, chopping should yield a tangible bonus (e.g. 2 wood instead of 1) — implement the check in `Player.gd`'s chop handler (read `Skills.get_count("chopping")` and the new `Skills.get_next_threshold("chopping")`), and communicate the unlock to the player via an on-screen toast/message (not just a console print) per the design note locked in Brief section 4
 - [ ] HUD: show the player's current chopping skill practice count (small label near the wood count), ideally as "N / next threshold" using the new `Skills.get_next_threshold("chopping")` helper, so the perk threshold above is visible/felt as it approaches, not just a surprise
 - [ ] Add a "running" skill-practice verb: track continuous sprint in `Player.gd` and call `Skills.practice("running", 1)` on a fixed interval while sprinting (e.g. every 3 seconds held) — check `project.godot`'s `[input]` section first; add a `sprint` input action if one doesn't already exist, don't assume
 - [ ] Add a placeholder "combat swing" skill-practice verb: the `attack` input action already exists (bound to left mouse, added during block-placement work) but has no handler yet — wire a bare `_try_attack()` in `Player.gd` that just calls `Skills.practice("combat", 1)` on press, no hit detection/damage needed yet (that's Phase 3's job, this is just gray-boxing the practice hook)
-- [ ] Generalize `Skills.gd`'s milestone signal so future perk code (chopping bonus above, and later combat/running perks) can subscribe cleanly instead of each verb hardcoding its own threshold check — e.g. rename/expand the existing `practiced` signal or add a `milestone_reached(skill_name, count)` signal alongside it
 
 Phase 0 (gray-box prototype: move, chop a cube tree, pick up wood, place one building piece) is complete per the Completed list below. Now working through **Phase 1 — Skill-by-practice foundation** (Brief section 10): 2-3 practiced verbs, at least one perk/threshold unlock communicated to the player, and locked-down skill-decay/diminishing-returns rules. When this queue runs low again (see "How this file is used" step 2), pull **Phase 2 — Survival & atmosphere basics** next. Full phase list: 0 gray-box prototype (done), 1 skill-by-practice foundation (active), 2 survival/atmosphere, 3 combat, 4 magic, 5 crafting/building depth, 6 hand-built biome, 7 procgen, 8 story/NPCs, 9 polish/UX, 10 multiplayer, 11 platform/release prep, 12 post-launch.
 
 ## Completed
 
+- [x] 2026-07-11 — Perk/threshold unlock for chopping + generalized milestone signal: `scripts/Skills.gd` (added `milestone_reached(skill_name, threshold, new_count)` signal, emitted once per threshold crossed inside `practice()`'s existing crossing loop — already skill-name-agnostic, so this also covers the separate "generalize the milestone signal" queue item; no other verb needs its own threshold-check code, they can all just listen to this one signal), `scripts/Player.gd` (chop handler now reads `Skills.get_next_threshold("chopping")` before calling `Skills.practice()`, grants 2 wood instead of 1 if the practice call crossed that threshold), `scripts/HUD.gd` + `scenes/ui/HUD.tscn` (new `ToastLabel` + `ToastTimer` nodes, `HUD.gd` subscribes to `Skills.milestone_reached` and shows a 3-second on-screen toast — "Chopping milestone! (10 practices)" etc. — decoupled from Player, so any future skill's milestones show the same way for free).
 - [x] 2026-07-11 — Geometric perk-threshold table in `Skills.gd`: replaced the flat `MILESTONE_INTERVAL = 10` with a widening threshold sequence (`10, 25, 55, 115, 235`, then generated further by `*2.1` and rounding) per the diminishing-returns design locked in Brief section 4. Added `get_next_threshold(skill_name)` for perk/HUD code to read cleanly, and milestone detection now correctly reports every threshold crossed even when a single `practice()` call jumps past more than one (batched amounts).
 - [x] 2026-07-11 — Name check for "The Long Apprentice": informal web search against Steam, itch.io, and general trademark/product results — no exact-title collision found (see `The Long Apprentice - Brief.md` section 2 for the write-up and caveats). Formal USPTO TESS search and manual storefront search still recommended before commercial release.
 - [x] 2026-07-11 — Placeholder logo / title screen scene: `scenes/ui/TitleScreen.tscn` (new — `Control` root, `ColorRect` background, centered `VBoxContainer` with a large "The Long Apprentice" title `Label` and a "Start" `Button`), `scripts/TitleScreen.gd` (new — connects the Start button's `pressed` signal, calls `get_tree().change_scene_to_file("res://scenes/world/Main.tscn")`), `project.godot` (edited — `run/main_scene` repointed from `Main.tscn` to `TitleScreen.tscn`, so the game now boots to the title screen first).
@@ -87,5 +88,5 @@ Phase 0 (gray-box prototype: move, chop a cube tree, pick up wood, place one bui
 - Follow the folder structure and conventions in `The Long Apprentice - Brief.md` (scenes/player, scenes/world, scenes/props, scripts, assets, addons).
 - Reusable-component rule from the Brief: never place raw meshes directly — build a scene once (e.g. `Tree.tscn`), instance it everywhere.
 - Input actions aren't fully defined yet in the Input Map beyond what `Player.gd` assumes (`move_forward/back/left/right`, `jump`) — check `project.godot` `[input]` section before assuming an action exists; add missing ones there.
-- Keep each session scoped — one small vertical slice, tested, committed. Resist the urge to start multiple queue items in one run.
+- Keep each of the 3 items scoped — one small vertical slice per item, validated and committed individually before moving to the next. Don't let item 3 balloon into a second milestone.
 - If genuinely blocked (missing decision, unclear design), don't guess silently — leave a clear note in the Session Log describing the blocker so the next session (or Thijs) can resolve it.

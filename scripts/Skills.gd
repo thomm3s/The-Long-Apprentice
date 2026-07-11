@@ -8,6 +8,11 @@ extends Node
 ## further apart over time.
 
 signal practiced(skill_name: String, new_count: int)
+## Emitted once per threshold crossed (a batched practice() call crossing
+## several thresholds at once emits this once per threshold, in order).
+## Perk code and the HUD toast both listen to this instead of duplicating
+## their own threshold checks.
+signal milestone_reached(skill_name: String, threshold: int, new_count: int)
 
 ## Example thresholds from the design note; beyond this the sequence
 ## continues by multiplying the last value by THRESHOLD_GROWTH and rounding.
@@ -25,7 +30,9 @@ func practice(skill_name: String, amount: int = 1) -> void:
 	var old_crossed: int = _thresholds_crossed(old_count)
 	var new_crossed: int = _thresholds_crossed(new_count)
 	for i in range(old_crossed, new_crossed):
-		print("Skill milestone: ", skill_name, " reached threshold ", _threshold_for_index(i), " (practiced ", new_count, " times)")
+		var threshold: int = _threshold_for_index(i)
+		print("Skill milestone: ", skill_name, " reached threshold ", threshold, " (practiced ", new_count, " times)")
+		milestone_reached.emit(skill_name, threshold, new_count)
 
 func get_count(skill_name: String) -> int:
 	return _counts.get(skill_name, 0)

@@ -22,8 +22,11 @@ func _try_interact() -> void:
 	var result: Dictionary = space_state.intersect_ray(query)
 	if result and result.collider.is_in_group("choppable") and result.collider.has_method("chop"):
 		result.collider.chop()
-		Inventory.add("wood", 1)
+		var next_threshold: int = Skills.get_next_threshold("chopping")
 		Skills.practice("chopping", 1)
+		# Crossing a threshold on this chop grants bonus wood (perk unlock).
+		var wood_gain: int = 2 if Skills.get_count("chopping") >= next_threshold else 1
+		Inventory.add("wood", wood_gain)
 		print("Wood: ", Inventory.get_count("wood"))
 
 func _try_place_block() -> void:

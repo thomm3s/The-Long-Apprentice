@@ -12,3 +12,16 @@ offset_right = 216.0
 offset_bottom = 48.0
 theme_override_font_sizes/font_size = 24
 text = "Wood: 0"
+
+[node name="ToastLabel" type="Label" parent="."]
+offset_left = 340.0
+offset_top = 16.0
+offset_right = 940.0
+offset_bottom = 56.0
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+horizontal_alignment = 1
+text = ""
+visible = false
+
+[node name="ToastTimer" type="Timer" parent="."]
