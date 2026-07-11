@@ -17,27 +17,23 @@ If a queue item is too big to finish in 20 minutes, split it into a smaller sub-
 
 ## Validation (do this before committing)
 
-The sandbox itself is ephemeral (fresh Linux VM every run, nothing pre-installed), but the project folder persists — so a Linux Godot binary is cached at `.godot-tools/Godot_v4.7-stable_linux.x86_64` in the project root (gitignored). Each session:
+Since 2026-07-10 (inventory session onward), these sessions have run directly on Thijs's persistent Windows machine, not an ephemeral sandbox — the project folder, git, and the real Windows Godot editor binary are all just there and working normally. Use the local editor binary directly:
 ```
-GODOT="<project folder>/.godot-tools/Godot_v4.7-stable_linux.x86_64"
-if [ ! -x "$GODOT" ]; then
-  mkdir -p "<project folder>/.godot-tools"
-  curl -L -o /tmp/godot.zip https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip
-  unzip -o /tmp/godot.zip -d "<project folder>/.godot-tools"
-  chmod +x "$GODOT"
-fi
+GODOT="C:\Users\Thijs\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe"
 "$GODOT" --headless --import --path "<project folder>"
 ```
-(Thijs runs the Windows build locally at `C:\Users\Thijs\Downloads\Godot_v4.7-stable_win64.exe` — the cached Linux binary matches that version so headless validation reflects what he actually sees in the editor. If Thijs upgrades his local Godot version, update this cached binary and the version numbers here to match.)
+(If Thijs upgrades his local Godot version, update this path and the version numbers throughout this file to match.)
 Then write/reuse a small `SceneTree` script to `ResourceLoader.load()` and `.instantiate()` any scenes touched this session, and check exit code / stderr for errors. Don't commit if the project doesn't import cleanly or a touched scene fails to load.
 
-**Git note:** the repo has a GitHub remote (`origin`) but sessions should only `git add` the specific touched files and `git commit` locally — never `git push` automatically. If `git status` errors out (stale sandbox-mount cache — a known glitch, not a real repo problem), don't try to fix `.git` by deleting/reiniting it (deletes/renames are blocked on this mount and will make it worse). Just skip git for that run, do the file edits anyway, and note in the Session Log that git was unavailable.
+**Fallback (only if a future session is genuinely a fresh ephemeral sandbox with no persistent filesystem):** a Linux Godot binary can be cached at `.godot-tools/Godot_v4.7-stable_linux.x86_64` (gitignored) — download it from `https://github.com/godotengine/godot/releases/download/4.7-stable/Godot_v4.7-stable_linux.x86_64.zip` if missing, matching Thijs's local Windows version, and run the same `--headless --import` against it. As of this writing this fallback hasn't actually been needed since the very first session.
+
+**Git note:** the repo has a GitHub remote (`origin`) but sessions should only `git add` the specific touched files and `git commit` locally — never `git push` automatically. Git has worked normally in every session since 2026-07-10 (inventory onward). The only failure was in the very first session (2026-07-10, "chop tree") — attributed to a one-off stale sandbox-mount-cache glitch that has not recurred since; it does not describe the current environment. If `git status` ever does error out, don't try to fix `.git` by deleting/reiniting it — just skip git for that run, do the file edits anyway, and note it clearly in the Session Log (it would now be worth investigating rather than assuming, since it hasn't been the norm).
 
 ## Current Status (as of 2026-07-11)
 
 Prototype scaffolding exists and loads cleanly: `project.godot`, `scenes/player/Player.tscn`, `scenes/world/Main.tscn`, `scripts/Player.gd` (basic `CharacterBody3D` movement + raycast interact + raycast block placement), `scenes/props/Tree.tscn`, `scripts/Tree.gd` (chop-able placeholder tree), `scenes/props/Block.tscn` (placeholder placed-block cube, no script, group `placed_block`), `scripts/Inventory.gd` (autoload singleton, numbers-only item counts), `scenes/ui/HUD.tscn` + `scripts/HUD.gd` (CanvasLayer wood-count label, live-updates off `Inventory.changed`) — all verified via headless import + instantiate on Godot 4.7, no errors. Project upgraded from 4.3 to 4.7 on 2026-07-10 (config/features auto-bumped by the engine on import). Player can walk up to a Tree instance in Main.tscn and press E to chop it (removes tree, calls `Inventory.add("wood", 1)`, reflected live in the on-screen HUD label). Player can also right-click (new `place_block` input action) to raycast against the world and spawn a `Block.tscn` instance at the hit point (offset by the surface normal), decrementing wood by 1; does nothing if wood count is 0. Chopping a tree now also increments a hidden `Skills` autoload counter for `"chopping"`, printing a milestone line every 10 practices (no levels/perks yet). The game now boots into a placeholder title screen (`scenes/ui/TitleScreen.tscn`) instead of straight into `Main.tscn` — `project.godot`'s `run/main_scene` was repointed there; a "Start" button switches to `Main.tscn` via `get_tree().change_scene_to_file()`.
 
-Git is initialized with a GitHub remote (`origin` -> thomm3s/The-Long-Apprentice). Each session commits locally after validating its change; nothing auto-pushes. This session ran directly on Thijs's Windows machine (not an ephemeral sandbox) with git and the real Windows Godot 4.7 editor binary (`C:\Users\Thijs\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe`) both working normally — the earlier sandbox mount-cache/git issues noted below did not reproduce here.
+Git is initialized with a GitHub remote (`origin` -> thomm3s/The-Long-Apprentice). Each session commits locally after validating its change; nothing auto-pushes. Sessions run directly on Thijs's persistent Windows machine (not an ephemeral sandbox), with git and the real Windows Godot 4.7 editor binary (`C:\Users\Thijs\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe`) both working normally — this has held for every session since 2026-07-10 (inventory onward). The mount-cache/git glitch mentioned in the Session Log was a one-off in the very first session and hasn't recurred.
 
 The two stray placeholder files (`scripts/_probe_test.gd`, `_validate.gd`) have been deleted — they were confirmed inert and unreferenced.
 
@@ -75,7 +71,7 @@ Currently working through **Phase 0** of the Brief's roadmap (section 10). When 
 
 - SceneTree probe scripts used for validation must override `_initialize()`, not `_init()` — autoload singletons (e.g. `Inventory`) aren't registered as script globals yet during `_init()` in a `--script`-driven headless run, so referencing them there throws `Identifier not found`. `_initialize()` runs after autoload setup.
 - That said, a probe script that IS the `--script` entry point still fails if it references an autoload by its bare global identifier anywhere in its own top-level code (even inside `_initialize()`) — the entry script itself is parsed/compiled before autoloads are registered, so this is a compile-time error, not a runtime one. Fix: use `get_node("/root/<AutoloadName>")` in the entry probe script instead of the bare identifier. (Scenes/scripts loaded via `ResourceLoader.load()` *from* the probe don't have this problem — they compile lazily at load time, after autoloads exist.)
-- Engine: Godot 4.7 stable, GDScript. Thijs runs the Windows editor locally; sandbox sessions validate against the matching Linux 4.7 build.
+- Engine: Godot 4.7 stable, GDScript. Sessions run directly on Thijs's persistent Windows machine and validate using his actual local editor binary (`C:\Users\Thijs\Downloads\Godot_v4.7-stable_win64.exe\Godot_v4.7-stable_win64_console.exe`) — not a separate sandbox/VM. A cached Linux binary exists at `.godot-tools/` as an untested fallback in case a future session ever runs in a genuinely ephemeral environment.
 - Follow the folder structure and conventions in `The Long Apprentice - Brief.md` (scenes/player, scenes/world, scenes/props, scripts, assets, addons).
 - Reusable-component rule from the Brief: never place raw meshes directly — build a scene once (e.g. `Tree.tscn`), instance it everywhere.
 - Input actions aren't fully defined yet in the Input Map beyond what `Player.gd` assumes (`move_forward/back/left/right`, `jump`) — check `project.godot` `[input]` section before assuming an action exists; add missing ones there.
