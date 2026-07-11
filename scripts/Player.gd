@@ -3,6 +3,8 @@ extends CharacterBody3D
 const SPEED = 5.0
 const SPRINT_SPEED = SPEED * 1.6
 const SPRINT_PRACTICE_INTERVAL = 3.0
+const STAMINA_DRAIN_PER_SEC = 100.0 / 15.0 # empties in 15s of continuous sprint
+const STAMINA_REGEN_PER_SEC = 100.0 / 8.0 # refills in 8s while not sprinting
 const JUMP_VELOCITY = 4.5
 const INTERACT_RANGE = 3.0
 const PLACE_RANGE = 10.0
@@ -79,11 +81,15 @@ func _physics_process(delta):
 
 ## Practices "running" every SPRINT_PRACTICE_INTERVAL seconds of continuous
 ## sprinting; releasing sprint (or stopping) resets the held-time count, so
-## only sustained sprinting counts, not tapping the key.
+## only sustained sprinting counts, not tapping the key. Also drains the
+## stamina stat while sprinting and regenerates it otherwise (no gameplay
+## consequence at 0 stamina yet — that's a separate queue item).
 func _track_sprint(sprinting: bool, delta: float) -> void:
 	if not sprinting:
 		_sprint_held_time = 0.0
+		Stats.add("stamina", STAMINA_REGEN_PER_SEC * delta)
 		return
+	Stats.add("stamina", -STAMINA_DRAIN_PER_SEC * delta)
 	_sprint_held_time += delta
 	while _sprint_held_time >= SPRINT_PRACTICE_INTERVAL:
 		Skills.practice("running", 1)
